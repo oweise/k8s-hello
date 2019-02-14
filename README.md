@@ -27,15 +27,16 @@ What you will need:
 ## Preparations
 
 These are preparations that you only need to do once for this project. Once they are completed you can create and
-destroy your projects Kubernetes cluster, like described in the later chapters, as often as desired based on your
+destroy your Kubernetes cluster, like described in the later chapters, as often as desired based on your
 project.
 
-### Fork this repository
+### Fork (or copy) this repository
 
-For working with this repository we recommend forking it. This will allow you to bind your specific version to
-your cluster.
+For working with this repository we recommend forking it. This will allow you to bind your specific version of the
+ project to your cluster.
 
-Just use the "Fork" button on this repo. Make note of the repo URL of your fork for the next step. 
+Just use the "Fork" button on this repo. Make note of the repo URL of your fork for the next step.
+Of course you can also just create a copy if you plan to do something completely independent. 
 
 ### Checkout your fork of the repository
 
@@ -47,7 +48,7 @@ git clone <your-forks-repo-url>
 
 ### Create a Github access token
 
-For automatically checking out your repo your Github account needs an access token.
+For automatically checking out your repo via AWS Code Build your Github account needs an access token.
 
 - Got to URL `https://github.com/settings/tokens/new`
 - Log in
@@ -56,7 +57,6 @@ For automatically checking out your repo your Github account needs an access tok
 - Click button "Generate token"
 - Copy the token created and displayed and store it somewhere safe. You will only be able to retrieve it right now!. 
 Don't give it away because it enables anybody to use Github via your account!
-
 
 ### Prepare AWS credential file
 
@@ -75,23 +75,38 @@ over to a location OUTSIDE this repository to keep it from being checked in. Fil
 
 These parameters influence the build process of your project in AWS.
 
-In the "cloudformation" directory you find a file parameters-template.json", providing the structure of a parameters
-file that can be used as input. Copy it over to a location OUTSIDE this repo to keep it from getting checked in. 
+You find a file "cloudformation/parameters-template.json" in this repo, providing the structure of a parameters
+file that can be used as input:
+
+```
+[
+  {
+    "ParameterKey": "GitHubToken",
+    "ParameterValue": "<your-token>"
+  },
+  {
+    "ParameterKey": "GitHubUser",
+    "ParameterValue": "<your-user-name>"
+  }
+]
+```
+
+Copy it over to a location OUTSIDE this repo to keep it from getting checked in. 
 Fill it with your individual parameter values. 
 
-The file contains the mandatory parameters: 
+This file contains the mandatory parameters, expecting the following values: 
   
 - GitHubToken: The Github Token for your account created earlier
-- GitHubUser: Your Github user name, or more specific, the user name which owns the repository
+- GitHubUser: Your Github user name, or more specific, the user name which owns the repository fork
  
 Other parameters can be added in the provided syntax. You will need these only if you create your own projects
-based on this one with different names or if you want to modify how this build works:
+based on this one with different settings or if you want to modify how this build works:
 
-- EksClusterName: Name of the cluster (Default: k8s-hello)
-- GitSourceRepo: Name of the GitHub source repository (Default: k8s-hello)
+- EksClusterName: Name of the cluster. Needs to be the same as in Terraform (Default: k8s-hello)
+- GitSourceRepo: Name of the GitHub repository for checkout (Default: k8s-hello)
 - GitBranch: The branch to check out (Default: master)
 - CodeBuildDockerImage: AWS CodeBuild build image for the build job (Default: aws/codebuild/java:openjdk-8)
-- KubectlRoleName: The AWS IAM role that by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
+- KubectlRoleName: The AWS IAM role by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
 
 ### Preparing project tags file
 
@@ -118,6 +133,15 @@ You can set it by:
 aws configure set region eu-west-1
 ``` 
 
+### Initialize Terraform
+
+Terraform needs to initialize the state of this project and download necessary addons. On command line move into
+subdir "terraform" and run:
+
+```
+terraform init 
+```
+
 ## Deploying Kubernetes
 
 We will mainly use Terraform templates for this stored in subfolder "terraform" of this repository.
@@ -127,11 +151,10 @@ We will mainly use Terraform templates for this stored in subfolder "terraform" 
 In your command line change to the subdir "terraform" of this repository. Then execute
 
 ```
-terraform init 
 terraform apply --var-file=<your-aws-credentials-file>
 ```
 Terraform will first check what resources to create, then list them to you. To actually start deploying type "yes" 
-plus enter.
+and hit enter.
 
 After quite some time (several minutes) of work your Kubernetes Cluster should be up and running.
 
@@ -166,28 +189,28 @@ Then you can try if your kubectl can access the cluster. For example, to list th
 kubectl get pods --all-namespaces
 ```
 
-After some time output should be similar to this:
+After some time the output might be similar to this:
 
 ```
-NAMESPACE     NAME             TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
-default       kubernetes       ClusterIP      172.20.0.1      <none>        443/TCP          3h
-kube-system   kube-dns         ClusterIP      172.20.0.10     <none>        53/UDP,53/TCP    3h
+NAMESPACE     NAME                       READY   STATUS    RESTARTS   AGE
+kube-system   coredns-7554568866-k78w7   0/1     Pending   0          5m
+kube-system   coredns-7554568866-vpl6d   0/1     Pending   0          5m
 ```
 
 ### Register Kubernetes nodes
 
 One additional step is needed to actually register the Kubernetes worker nodes created by Terraform with
-the cluster. Terraform can put out a Kubernetes config map that contains registration information and
-needs to be created in the cluster via kubectl:
+the cluster. Terraform can put out a Kubernetes config map that this necessary contains registration information.
+Generate it and store it in some temporary file:
 
 ```
-terraform output config_map_aws_auth
+terraform output config_map_aws_auth > <temp-configmap-file-name> 
+```
+
+Then use kubectl to apply it:
+
 ``` 
-
-Put this out into a file and apply it to the cluster via "kubectl apply -f <filename>". Shortest way on Linux:
-
-```
-terraform output config_map_aws_auth | kubectl apply -f -
+kubectl apply -f <temp-configmap-file-name>
 ```
 
 After that check that the nodes actually connect:
@@ -223,7 +246,9 @@ We currently create this process by applying a "CloudFormation" template (which 
  
 ### Create a cloud formation stack
 
-We do this via AWS CLI. On command line move to the "cloudformation" subdir in this repository, then execute:
+We do this via AWS CLI. On command line move to the "cloudformation" subdir in this repository, then execute the
+following, replacing <your-parameters-file-path> with the location of the Cloud Formation parameters file you created
+in the preparations:
 
 ```
 aws cloudformation create-stack --stack-name=k8s-hello --template-body file://code-pipeline.yml --parameters file://<your-parameters-file-path> --capabilities CAPABILITY_IAM
@@ -243,7 +268,7 @@ to your Kubernetes cluster. You can watch the deployment, pods and service come 
 kubectl get all
 ```
 
-Output should be similar to this:
+Output should be similar to this after the build finishes:
 
 ```
 NAME                             READY   STATUS    RESTARTS   AGE
@@ -269,6 +294,10 @@ Hi (0, k8s-hello-786cdcbc88-zqwf5)
 ```
 
 Again, it might take some time for this to get available!
+
+## Additional features
+
+You can deploy a Kubernetes dashboard by following the README instructions in subdir "dashboard" of this repo.
 
 ## Clean up
 
