@@ -2,7 +2,7 @@
 
 A demo project for:
 
-- Deploying a Kubernetes Cluster in AWS via Terraform
+- Deploying a Kubernetes Cluster in AWS via Terraform. The cluster will have 3 worker nodes of AWS instance type "t2.micro"
 - Building a trivial Spring Boot Application via CodePipeline and deploying it into the Kubernetes Cluster
 
 ... for usage as a blueprint for further projects to experiment with AWS on Kubernetes.
@@ -69,12 +69,11 @@ secret_key = "<Replace with AWS secret key>"
 ```
 
 You find a template of it under "terraform/aws-credentials-template.vars" in this repo. Copy it
-over to "terraform/aws-credentials.vars" and fill it with your information. The .gitignore file in 
-this directory will keep it from getting checked in.
+over to a location OUTSIDE this repository to keep it from being checked in. Fill it with your information. 
 
 ### Preparing project tags file
 
-Also there is a file "project-tags.tfvars" in this directory. It contains values that will end up
+Also there is a file "project-tags.auto.tfvars" in this directory. It contains values that will end up
 as tags of the created AWS resources, so you later will be able to determine the resources that were
 created on behalf of your project.
 
@@ -85,8 +84,8 @@ Please set individual values in this file for the "user_name" and "project_name"
 In your command line change to the subdir "terraform" of this repository. Then execute
 
 ```
-terraform init
-terraform apply
+terraform init 
+terraform apply --var-file=<your-aws-credentials-file>
 ```
 Terraform will first check what resources to create, then list them to you. To actually start deploying type "yes" 
 plus enter.
@@ -178,6 +177,23 @@ We currently create this process by applying a "CloudFormation" template (which 
  tool of AWS). For applying it we use can use the AWS CLI (explained below). You could also use the AWS Web Console,
  Service "Cloud Formation",   with the file "cloudformation/code-pipeline.yml" in this repository
  and provide the parameters that are discussed below manually.
+ 
+ ### Ensure correct region for AWS CLI
+ 
+ In any case you should ensure that you create the resources in the same AWS region as your cluster has been
+ created. If you kept the default that is "eu-west-1" (Ireland). If you use the Web Console you can choose the region
+ by the "region" selector to the top right. If you use the AWS CLI the default region of your client config will be
+ effective. You can review it by
+ 
+```
+aws configure list
+```
+ 
+You can set it by:
+ 
+```
+aws configure set region eu-west-1
+``` 
 
 ### Create parameters file for AWS CLI.
 
@@ -196,16 +212,15 @@ if you want to modify how this build works:
 - KubectlRoleName: The AWS IAM role that by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
 
 In the "cloudformation" directory you find a file **parameters-template.json", providing the structure of a parameters
-file that can be used as input. Copy it over to "parameters.json" and fill it with your individual parameter values.
-The .gitignore file in this directory will keep it from being checked in.
+file that can be used as input. Copy it over to a location OUTSIDE this repo to keep it from getting checked in. 
+Fill it with your individual parameter values. 
 
 ### Create a cloud formation stack
 
 We do this via AWS CLI. On command line move to the "cloudformation" subdir in this repository, then execute:
 
 ```
-aws cloudformation create-stack --stack-name=k8s-hello --template-body file://code-pipeline.yml 
---parameters file://parameters.json --capabilities CAPABILITY_IAM
+aws cloudformation create-stack --stack-name=k8s-hello --template-body file://code-pipeline.yml --parameters file://<your-parameters-file-path> --capabilities CAPABILITY_IAM
 ``` 
 
 This will return the AWS ARN identifier of this stack. Execute this command to wait until the stack creation
@@ -251,7 +266,7 @@ Again, it might take some time for this to get available!
 
 ## Clean up
 
-To keep your cluster from causing costs you can pull everything down again like following:
+To keep your cluster from causing costs you can pull everything down again like follows:
 
 ### Delete kubernetes resources
 
@@ -279,7 +294,7 @@ aws cloudformation wait stack-delete-complete --stack-name=k8s-hello
 Again move to the "terraform" directory of your repository then run:
 
 ```
-terraform destroy
+terraform destroy --var-file=<your-aws-credentials-file>
 ```
 
 Terraform will again list all resources that will get removed. Type "yes" to confirm.

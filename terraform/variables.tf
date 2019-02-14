@@ -9,3 +9,7 @@ variable "cluster-name" {
 }
 variable "user_name" {}
 variable "project_name" {}
+variable "worker_instance_type" {
+  default = "t2.micro"
+  type    = "string"
+}
