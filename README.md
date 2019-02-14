@@ -24,12 +24,16 @@ What you will need:
  accordingly. You might want to consider using the [Linux Subsystem for Windows 10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
  which allows you to use a native Linux shell, seamlessly integrated on Windows 10.
 
-## Prepare the repository
+## Preparations
+
+These are preparations that you only need to do once for this project. Once they are completed you can create and
+destroy your projects Kubernetes cluster, like described in the later chapters, as often as desired based on your
+project.
+
+### Fork this repository
 
 For working with this repository we recommend forking it. This will allow you to bind your specific version to
 your cluster.
-
-### Fork this repository
 
 Just use the "Fork" button on this repo. Make note of the repo URL of your fork for the next step. 
 
@@ -54,13 +58,9 @@ For automatically checking out your repo your Github account needs an access tok
 Don't give it away because it enables anybody to use Github via your account!
 
 
-## Deploying Kubernetes
+### Prepare AWS credential file
 
-We will mainly use Terraform templates for this stored in subfolder "terraform" of this repository.
-
-### Preparing AWS credential file
-
-First you must create a terraform variable file containing your AWS account credentials.
+You need to create a terraform variable file containing your AWS account credentials.
 That is a simple text file with the following content:
 
 ```
@@ -71,13 +71,56 @@ secret_key = "<Replace with AWS secret key>"
 You find a template of it under "terraform/aws-credentials-template.vars" in this repo. Copy it
 over to a location OUTSIDE this repository to keep it from being checked in. Fill it with your information. 
 
+### Prepare parameters file for Cloud Formation
+
+These parameters influence the build process of your project in AWS.
+
+In the "cloudformation" directory you find a file parameters-template.json", providing the structure of a parameters
+file that can be used as input. Copy it over to a location OUTSIDE this repo to keep it from getting checked in. 
+Fill it with your individual parameter values. 
+
+The file contains the mandatory parameters: 
+  
+- GitHubToken: The Github Token for your account created earlier
+- GitHubUser: Your Github user name, or more specific, the user name which owns the repository
+ 
+Other parameters can be added in the provided syntax. You will need these only if you create your own projects
+based on this one with different names or if you want to modify how this build works:
+
+- EksClusterName: Name of the cluster (Default: k8s-hello)
+- GitSourceRepo: Name of the GitHub source repository (Default: k8s-hello)
+- GitBranch: The branch to check out (Default: master)
+- CodeBuildDockerImage: AWS CodeBuild build image for the build job (Default: aws/codebuild/java:openjdk-8)
+- KubectlRoleName: The AWS IAM role that by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
+
 ### Preparing project tags file
 
-Also there is a file "project-tags.auto.tfvars" in this directory. It contains values that will end up
-as tags of the created AWS resources, so you later will be able to determine the resources that were
+Also there is a file "terraform/project-tags.auto.tfvars". It contains values that will end up
+as tags of the created AWS resources. You can use these tags later to determine the resources that were
 created on behalf of your project.
 
 Please set individual values in this file for the "user_name" and "project_name" variables.
+
+### Ensure correct region for AWS CLI
+ 
+You should ensure that you create the resources in the same AWS region as your cluster has been
+created. If you kept the default that is "eu-west-1" (Ireland). If you use the Web Console you can choose the region
+by the "region" selector to the top right. If you use the AWS CLI the default region of your client config will be
+effective. You can review it by
+ 
+```
+aws configure list
+```
+ 
+You can set it by:
+ 
+```
+aws configure set region eu-west-1
+``` 
+
+## Deploying Kubernetes
+
+We will mainly use Terraform templates for this stored in subfolder "terraform" of this repository.
 
 ### Initialize and apply terraform templates
 
@@ -178,43 +221,6 @@ We currently create this process by applying a "CloudFormation" template (which 
  Service "Cloud Formation",   with the file "cloudformation/code-pipeline.yml" in this repository
  and provide the parameters that are discussed below manually.
  
- ### Ensure correct region for AWS CLI
- 
- In any case you should ensure that you create the resources in the same AWS region as your cluster has been
- created. If you kept the default that is "eu-west-1" (Ireland). If you use the Web Console you can choose the region
- by the "region" selector to the top right. If you use the AWS CLI the default region of your client config will be
- effective. You can review it by
- 
-```
-aws configure list
-```
- 
-You can set it by:
- 
-```
-aws configure set region eu-west-1
-``` 
-
-### Create parameters file for AWS CLI.
-
-There are some parameters that you can specify for this template. Only 2 of them are mandatory:
- 
-- GitHubToken: The Github Token for your account created earlier
-- GitHubUser: Your Github user name, or more specific, the user name which owns the repository
- 
-You will need the other parameters only if you create your own repositories based on this one with different names or
-if you want to modify how this build works:
-
-- EksClusterName: Name of the cluster (Default: k8s-hello)
-- GitSourceRepo: Name of the GitHub source repository (Default: k8s-hello)
-- GitBranch: The branch to check out (Default: master)
-- CodeBuildDockerImage: AWS CodeBuild build image for the build job (Default: aws/codebuild/java:openjdk-8)
-- KubectlRoleName: The AWS IAM role that by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
-
-In the "cloudformation" directory you find a file **parameters-template.json", providing the structure of a parameters
-file that can be used as input. Copy it over to a location OUTSIDE this repo to keep it from getting checked in. 
-Fill it with your individual parameter values. 
-
 ### Create a cloud formation stack
 
 We do this via AWS CLI. On command line move to the "cloudformation" subdir in this repository, then execute:
@@ -223,15 +229,15 @@ We do this via AWS CLI. On command line move to the "cloudformation" subdir in t
 aws cloudformation create-stack --stack-name=k8s-hello --template-body file://code-pipeline.yml --parameters file://<your-parameters-file-path> --capabilities CAPABILITY_IAM
 ``` 
 
-This will return the AWS ARN identifier of this stack. Execute this command to wait until the stack creation
-is complete:
+This will return immediately with the AWS ARN identifier of this stack, which however is still in the process of being
+created. Execute the following command to wait until the stack creation is complete:
 
 ```
 aws cloudformation wait stack-create-complete --stack-name=k8s-hello
 ```
 
-After this all is effectively set up! The first build will start automatically and in the end deploy to your
-Kubernetes cluster. You can watch the deployment, pods and service come up once they are ready:
+After this the code pipeline is effectively set up! The first build will start automatically and in the end deploy
+to your Kubernetes cluster. You can watch the deployment, pods and service come up once they are ready:
 
 ```
 kubectl get all
