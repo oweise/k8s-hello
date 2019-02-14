@@ -1,0 +1,10 @@
+target
+*.log
+*.ctxt
+.idea
+*.iml
+terraform.tfvars
+terraform.tfstate*
+.terraform/
+.terraform.tfstate.lock.info
+config_map_aws_auth.yaml
