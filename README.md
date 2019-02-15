@@ -68,7 +68,7 @@ access_key = "<Replace with AWS access key>"
 secret_key = "<Replace with AWS secret key>"
 ```
 
-You find a template of it under "terraform/aws-credentials-template.vars" in this repo. Copy it
+You find a template of it under "terraform/aws-credentials.tfvars.template" in this repo. Copy it
 over to a location OUTSIDE this repository to keep it from being checked in. Fill it with your information. 
 
 ### Prepare parameters file for Cloud Formation
@@ -151,15 +151,15 @@ We will mainly use Terraform templates for this stored in subfolder "terraform" 
 In your command line change to the subdir "terraform" of this repository. Then execute
 
 ```
-terraform apply --var-file=<your-aws-credentials-file>
+terraform apply -var-file=<your-aws-credentials-file>
 ```
 Terraform will first check what resources to create, then list them to you. To actually start deploying type "yes" 
 and hit enter.
 
 After quite some time (several minutes) of work your Kubernetes Cluster should be up and running.
 
-**NOTE:** The cluster will be created in AWS region "eu-west-1" (Ireland). To change this you could provide a var
-"region" with your preferred region identifier via command line parameter "--var 'regionÜ=<your-identifier>'". But
+**NOTE:** The cluster will be created in AWS region "eu-west-1" (Ireland). To change this you could provide a var 
+"region" with your preferred region identifier via command line parameter "--var 'region=<your-identifier>'". But
 You will need to also use that region further down this setup.
 
 ### Connect to Kubernetes Cluster via kubectl
