@@ -81,7 +81,7 @@ metadata:
 
 nodeGroups:
 - name: ng-1
-  instanceType: t2.micro
+  instanceType: m5.large
   desiredCapacity: 3
   ```
 
