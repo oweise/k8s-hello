@@ -1,0 +1,13 @@
+apiVersion: eksctl.io/v1alpha4
+kind: ClusterConfig
+
+metadata:
+  name: k8s-hello
+  region: eu-west-1
+  tags:
+    owner: your-user-name
+
+nodeGroups:
+- name: ng-1
+  instanceType: t2.micro
+  desiredCapacity: 3

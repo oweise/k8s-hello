@@ -1,5 +1,9 @@
 [
   {
+    "ParameterKey": "EksClusterName",
+    "ParameterValue": "k8s-hello"
+  },
+  {
     "ParameterKey": "GitHubToken",
     "ParameterValue": "<your-token>"
   },

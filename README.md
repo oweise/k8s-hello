@@ -2,33 +2,39 @@
 
 A demo project for:
 
-- Deploying a Kubernetes Cluster in AWS via Terraform. The cluster will have 3 worker nodes of AWS instance type "t2.micro"
+- Deploying a Kubernetes Cluster in AWS via eksctl. The cluster will have 3 worker nodes of AWS instance type "t2.micro"
 - Building a trivial Spring Boot Application via CodePipeline and deploying it into the Kubernetes Cluster
 
 ... for usage as a blueprint for further projects to experiment with AWS on Kubernetes.
 
 What you will need:
 
-- [Git CLI](https://git-scm.com/)
-- [Terraform CLI](https://www.terraform.io/)
-- [kubectl CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
+- [Git CLI](https://git-scm.com/). We are pretty confident you already have it.
+- [eksctl CLI](https://github.com/weaveworks/eksctl), a convenience command line tool to create EKS clusters, built by
+  Weaveworks.
 - An AWS account with the policy "AdministratorAccess" and its access and secret key
-- The [AWS CLI](https://aws.amazon.com/de/cli/), setup to use the account mentioned above
+- The [AWS CLI](https://aws.amazon.com/de/cli/), an Amazon tool to work with AWS. It must be setup to use the account 
+  mentioned above.
+- The [kubectl CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/), the default 
+  Kubernetes client in version 1.11 or higher. This is not really needed for setup but for everything 
+  you want to do with this cluster, so we will ensure that it is configured to access the it.
+- The [AWS IAM Authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator/releases). This is a tool that 
+  will allow kubectl to login to EKS with Amazon credentials. You just need to download it and put it somewhere on your
+  PATH. You do not need to execute the setup procedure described on the projects README. 
 
 **WARNING:** This deployment will actually cause some costs on your AWS account. These should be kept small 
 (*some* dollars) if you destroy the deployment once you finished working with it. If you keep it running for
- a longer time you will cause additional time-based costs for using certain resources (Kubernetes Masters, Load Balancers)
- even if there is no actual traffic on it.
+ a longer time you will cause additional time-based costs for using certain resources (Kubernetes Masters, 
+ Load Balancers, EC2 instances depending on the instance type you use) even if there is no actual traffic on it.
  
  **NOTE:** All command line instructions here are for Linux shells. On Windows you might need to change the calls
  accordingly. You might want to consider using the [Linux Subsystem for Windows 10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
- which allows you to use a native Linux shell, seamlessly integrated on Windows 10.
+ which allows you to use a native Linux shell, seamlessly integrated on Windows 10. Might spare you some nerves :)
 
 ## Preparations
 
 These are preparations that you only need to do once for this project. Once they are completed you can create and
-destroy your Kubernetes cluster, like described in the later chapters, as often as desired based on your
-project.
+destroy the Kubernetes cluster for this project, like described in the later chapters, as often as desired.
 
 ### Fork (or copy) this repository
 
@@ -38,7 +44,7 @@ For working with this repository we recommend forking it. This will allow you to
 Just use the "Fork" button on this repo. Make note of the repo URL of your fork for the next step.
 Of course you can also just create a copy if you plan to do something completely independent. 
 
-### Checkout your fork of the repository
+### Checkout your fork/copy of the repository
 
 To your local file system:
 
@@ -58,18 +64,32 @@ For automatically checking out your repo via AWS Code Build your Github account 
 - Copy the token created and displayed and store it somewhere safe. You will only be able to retrieve it right now!. 
 Don't give it away because it enables anybody to use Github via your account!
 
-### Prepare AWS credential file
+### Preparing cluster definition file
 
-You need to create a terraform variable file containing your AWS account credentials.
-That is a simple text file with the following content:
+Also there is a file "eksctl/cluster-definition.yaml". It contains a definition file for
+your Kubernetes cluster.
 
-```
-access_key = "<Replace with AWS access key>"
-secret_key = "<Replace with AWS secret key>"
-```
+``` 
+apiVersion: eksctl.io/v1alpha4
+kind: ClusterConfig
 
-You find a template of it under "terraform/aws-credentials.tfvars.template" in this repo. Copy it
-over to a location OUTSIDE this repository to keep it from being checked in. Fill it with your information. 
+metadata:
+  name: k8s-hello
+  region: eu-west-1
+  tags:
+    owner: your-user-name
+
+nodeGroups:
+- name: ng-1
+  instanceType: t2.micro
+  desiredCapacity: 3
+  ```
+
+Please set individual values in this file for the properties:
+ 
+- "metadata.name" - This is your cluster name. Should be unique on your AWS account.
+- "metadata.tags.owner" - Your name that will be stored in a tag named "owner" on all resources that are created
+for this cluster
 
 ### Prepare parameters file for Cloud Formation
 
@@ -80,6 +100,10 @@ file that can be used as input:
 
 ```
 [
+  {
+    "ParameterKey": "EksClusterName",
+    "ParameterValue": "k8s-hello"
+  },
   {
     "ParameterKey": "GitHubToken",
     "ParameterValue": "<your-token>"
@@ -96,25 +120,17 @@ Fill it with your individual parameter values.
 
 This file contains the mandatory parameters, expecting the following values: 
   
+- EksClusterName: Name of the EKS cluster. Use the same name as in the previous step.
 - GitHubToken: The Github Token for your account created earlier
 - GitHubUser: Your Github user name, or more specific, the user name which owns the repository fork
  
-Other parameters can be added in the provided syntax. You will need these only if you create your own projects
-based on this one with different settings or if you want to modify how this build works:
+Other parameters can be added in the provided syntax. You will need these only if you copied the repository
+to create your own projects:
 
-- EksClusterName: Name of the cluster. Needs to be the same as in Terraform (Default: k8s-hello)
-- GitSourceRepo: Name of the GitHub repository for checkout (Default: k8s-hello)
+- GitSourceRepo: Name of the GitHub repository for checkout. (Default: k8s-hello)
 - GitBranch: The branch to check out (Default: master)
 - CodeBuildDockerImage: AWS CodeBuild build image for the build job (Default: aws/codebuild/java:openjdk-8)
 - KubectlRoleName: The AWS IAM role by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
-
-### Preparing project tags file
-
-Also there is a file "terraform/project-tags.auto.tfvars". It contains values that will end up
-as tags of the created AWS resources. You can use these tags later to determine the resources that were
-created on behalf of your project.
-
-Please set individual values in this file for the "user_name" and "project_name" variables.
 
 ### Ensure correct region for AWS CLI
  
@@ -133,87 +149,26 @@ You can set it by:
 aws configure set region eu-west-1
 ``` 
 
-### Initialize Terraform
-
-Terraform needs to initialize the state of this project and download necessary addons. On command line move into
-subdir "terraform" and run:
-
-```
-terraform init 
-```
-
 ## Deploying Kubernetes
 
-We will mainly use Terraform templates for this stored in subfolder "terraform" of this repository.
+We will use the eksctl tool for this.
 
-### Initialize and apply terraform templates
+### Create Cluster
 
-In your command line change to the subdir "terraform" of this repository. Then execute
+eksctl will reuse the AWS credentials that were setup for the AWS CLI, so we do not need to configure it if this is 
+setup.
+
+In your command line change to the root dir of the project then execute:
 
 ```
-terraform apply -var-file=<your-aws-credentials-file>
+eksctl create cluster -f eksctl/cluster-definition.yaml
 ```
-Terraform will first check what resources to create, then list them to you. To actually start deploying type "yes" 
-and hit enter.
 
 After quite some time (several minutes) of work your Kubernetes Cluster should be up and running.
 
-**NOTE:** The cluster will be created in AWS region "eu-west-1" (Ireland). To change this you could provide a var 
-"region" with your preferred region identifier via command line parameter "--var 'region=<your-identifier>'". But
-You will need to also use that region further down this setup.
+### Check connection to Kubernetes Cluster via kubectl
 
-### Connect to Kubernetes Cluster via kubectl
-
-After execution Terraform is able to put out a kubectl configuration to connect to the new cluster via the following
-command (still in the "terraform" directory):
-
-```
-terraform output kubeconfig
-```
-
-Move that into a file. For example, to store it into the ".kube" directory: 
-
-```
-terraform output kubeconfig > ~/.kube/config-eks-on-aws
-```
-
-You can use this config for kubectl by pointing environment variable "KUBECONFIG" to it:
-
-```
-export KUBECONFIG=$KUBECONFIG:~/.kube/config-eks-on-aws
-```
-
-Then you can try if your kubectl can access the cluster. For example, to list the pods on the cluster:
-
-```
-kubectl get pods --all-namespaces
-```
-
-After some time the output might be similar to this:
-
-```
-NAMESPACE     NAME                       READY   STATUS    RESTARTS   AGE
-kube-system   coredns-7554568866-k78w7   0/1     Pending   0          5m
-kube-system   coredns-7554568866-vpl6d   0/1     Pending   0          5m
-```
-
-### Register Kubernetes nodes
-
-One additional step is needed to actually register the Kubernetes worker nodes created by Terraform with
-the cluster. Terraform can put out a Kubernetes config map that this necessary contains registration information.
-Generate it and store it in some temporary file:
-
-```
-terraform output config_map_aws_auth > <temp-configmap-file-name> 
-```
-
-Then use kubectl to apply it:
-
-``` 
-kubectl apply -f <temp-configmap-file-name>
-```
-
-After that check that the nodes actually connect:
+After creation your kubectl should already have a context configured by which you can access the cluster.
 
 ```
 kubectl get nodes
@@ -246,19 +201,23 @@ We currently create this process by applying a "CloudFormation" template (which 
  
 ### Create a cloud formation stack
 
-We do this via AWS CLI. On command line move to the "cloudformation" subdir in this repository, then execute the
-following, replacing <your-parameters-file-path> with the location of the Cloud Formation parameters file you created
-in the preparations:
+We do this via AWS CLI. From the project root dir execute the
+following command, replacing:
+ 
+- <your-parameters-file-path> with the location of the Cloud Formation parameters file you created
+in the preparations
+- <your-cluster-name> with the name of your EKS cluster used in the preparations. It has no direct relation to that
+name but that way we ensure that the cloud formation stack is also uniquely named. 
 
 ```
-aws cloudformation create-stack --stack-name=k8s-hello --template-body file://code-pipeline.yml --parameters file://<your-parameters-file-path> --capabilities CAPABILITY_IAM
+aws cloudformation create-stack --stack-name=<your-cluster-name> --template-body file://cloudformation/code-pipeline.yml --parameters file://<your-parameters-file-path> --capabilities CAPABILITY_IAM
 ``` 
 
 This will return immediately with the AWS ARN identifier of this stack, which however is still in the process of being
 created. Execute the following command to wait until the stack creation is complete:
 
 ```
-aws cloudformation wait stack-create-complete --stack-name=k8s-hello
+aws cloudformation wait stack-create-complete --stack-name=<your-cluster-name>
 ```
 
 After this the code pipeline is effectively set up! The first build will start automatically and in the end deploy
@@ -326,16 +285,21 @@ aws cloudformation wait stack-delete-complete --stack-name=k8s-hello
 
 ### Remove Kubernetes cluster
 
-Again move to the "terraform" directory of your repository then run:
+Move to the root directory of your project then run:
 
 ```
-terraform destroy --var-file=<your-aws-credentials-file>
+eksctl delete cluster -f eksctl/cluster-definition.yaml
 ```
 
-Terraform will again list all resources that will get removed. Type "yes" to confirm.
+This will pull everything down.
 
 After several minutes all AWS resources should be gone again!
 
-**NOTE:** In some occasions the terraform destroy command may time out before the some resources, mostly the internet
-gateway, the subnets and the VPC have been removed. In that case you can simply repeat the destroy operation until
-everything has been removed!
+### Check that everything causing costs is gone
+
+This is normally not necessary, but just to be sure, go to your AWS console and check that at the following locations
+nothing remains that was used for your cluster:
+
+- EC2 Instances
+- EC2 Load Balancers
+- EKS Clusters
