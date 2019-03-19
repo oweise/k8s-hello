@@ -30,6 +30,7 @@ phases:
     - export AWS_SESSION_TOKEN="$(echo ${CREDENTIALS} | jq -r '.Credentials.SessionToken')"
     - export AWS_EXPIRATION=$(echo ${CREDENTIALS} | jq -r '.Credentials.Expiration')
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME
+    - kubectl config view
     - kubectl apply -f k8s.yml
     - printf '[{"name":"k8s-hello","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
 artifacts:

@@ -291,7 +291,12 @@ Move to the root directory of your project then run:
 eksctl delete cluster -f eksctl/cluster-definition.yaml
 ```
 
-This will pull everything down.
+This will pull everything down. However this command will exit early before everything was deleted.
+You can wait for the deletion of the stack by calling:
+
+```
+aws cloudformation wait stack-delete-complete --stack-name=eksctl-<your-cluster-name>-cluster
+```
 
 After several minutes all AWS resources should be gone again!
 
