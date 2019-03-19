@@ -24,8 +24,8 @@ phases:
   post_build:
     commands:
     - docker push $REPOSITORY_URI:$TAG
+    - aws sts get-caller-identity
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME
-    - kubectl sts get-caller-identity
     - kubectl apply -f k8s.yml
     - printf '[{"name":"k8s-hello","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
 artifacts:
