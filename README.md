@@ -115,12 +115,11 @@ file that can be used as input:
 ]
 ```
 
-Copy it over to a location OUTSIDE this repo to keep it from getting checked in. 
-Fill it with your individual parameter values. 
+Copy it over to name "parameters.json" in the same folder, which is kept from being checked in to Git via .gitignore
+(so watch the correct spelling :).  Fill it with your individual parameter values. 
 
 This file contains the mandatory parameters, expecting the following values: 
   
-- EksClusterName: Name of the EKS cluster. Use the same name as in the previous step.
 - GitHubToken: The Github Token for your account created earlier
 - GitHubUser: Your Github user name, or more specific, the user name which owns the repository fork
  
@@ -130,7 +129,6 @@ to create your own projects:
 - GitSourceRepo: Name of the GitHub repository for checkout. (Default: k8s-hello)
 - GitBranch: The branch to check out (Default: master)
 - CodeBuildDockerImage: AWS CodeBuild build image for the build job (Default: aws/codebuild/java:openjdk-8)
-- KubectlRoleName: The AWS IAM role by which kubectl works with the cluster (Default: k8s-hello-codebuild-role)
 
 ### Ensure correct region for AWS CLI
  

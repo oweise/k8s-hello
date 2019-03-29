@@ -2,12 +2,14 @@ apiVersion: eksctl.io/v1alpha4
 kind: ClusterConfig
 
 metadata:
-  name: k8s-hello
+  name: ${CLUSTER_NAME}
   region: eu-west-1
   tags:
-    owner: your-user-name
+    owner: ${OWNER}
 
 nodeGroups:
 - name: ng-1
   instanceType: m5.large
   desiredCapacity: 3
+  allowSSH: true
+  sshPublicKeyPath: /home/oliver/.ssh/id_rsa.pub
