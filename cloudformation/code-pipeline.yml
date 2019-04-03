@@ -146,6 +146,10 @@ Resources:
         PolicyDocument:
           Version: 2012-10-17
           Statement:
+          - Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/EksWorkshopCodeBuildKubectlRole
+            Effect: Allow
+            Action:
+            - sts:AssumeRole
           - Resource: "*"
             Effect: Allow
             Action:
