@@ -26,7 +26,7 @@ phases:
     - docker push $REPOSITORY_URI:$TAG
     - aws sts get-caller-identity
     - aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 900
-    - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --role-arn $KES_KUBECTL_ROLE_ARN
+    - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME --role-arn $EKS_KUBECTL_ROLE_ARN
     - cat ~/.kube/config
     - kubectl apply -f k8s.yml
     - printf '[{"name":"k8s-hello","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
