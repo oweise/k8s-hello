@@ -213,6 +213,8 @@ Resources:
           Value: !Ref GitBranch
         - Name: EKS_CLUSTER_NAME
           Value: !Ref EksClusterName
+        - Name: EKS_KUBECTL_ROLE_ARN
+          Value: !Sub arn:aws:iam::${AWS::AccountId}:role/EksWorkshopCodeBuildKubectlRole
       Name: !Ref AWS::StackName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
 
