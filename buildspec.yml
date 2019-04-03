@@ -27,6 +27,7 @@ phases:
     - aws sts get-caller-identity
     - aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 90
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME
+    - cat ~/.kube/config
     - kubectl apply -f k8s.yml
     - printf '[{"name":"k8s-hello","imageUri":"%s"}]' $REPOSITORY_URI:$TAG > build.json
 artifacts:
