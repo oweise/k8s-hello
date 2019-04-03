@@ -25,7 +25,7 @@ phases:
     commands:
     - docker push $REPOSITORY_URI:$TAG
     - aws sts get-caller-identity
-    - aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 90
+    - aws sts assume-role --role-arn $EKS_KUBECTL_ROLE_ARN --role-session-name codebuild-kubectl --duration-seconds 900
     - aws eks update-kubeconfig --name $EKS_CLUSTER_NAME
     - cat ~/.kube/config
     - kubectl apply -f k8s.yml
