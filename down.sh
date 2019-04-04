@@ -17,6 +17,8 @@ echo "========================================================================="
 if aws cloudformation describe-stack-resources --stack-name=${PIPELINE_STACK_NAME} >> /dev/null; then
     aws cloudformation delete-stack --stack-name=${PIPELINE_STACK_NAME}
     aws cloudformation wait stack-delete-complete --stack-name=${PIPELINE_STACK_NAME}
+    aws s3 rb s3://${PIPELINE_STACK_NAME}-bucket --force
+    aws ecr delete-repository --repository-name=${PIPELINE_STACK_NAME}-repository --force
 else
     echo "Pipeline stack does not exist. Skipping ..."
 fi

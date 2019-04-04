@@ -12,6 +12,11 @@ Parameters:
     MaxLength: 100
     ConstraintDescription: You must enter the EKS cluster name
 
+  EksDeployerRoleName:
+    Type: String
+    Description: The name of the role permitted to deploy on this EKS-cluster
+    Default: k8s-deployer
+
   GitSourceRepo:
     Type: String
     Description: GitHub source repository - must contain a Dockerfile and buildspec.yml in the base
@@ -88,10 +93,14 @@ Resources:
 
   EcrDockerRepository:
     Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Sub "${AWS::StackName}-repository"
     DeletionPolicy: Retain
 
   CodePipelineArtifactBucket:
     Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${AWS::StackName}-bucket"
     DeletionPolicy: Retain
 
   CodePipelineServiceRole:
@@ -206,20 +215,25 @@ Resources:
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
         Type: LINUX_CONTAINER
-        Image: !Ref CodeBuildDockerImage
+        Image:
+          Ref: CodeBuildDockerImage
         PrivilegedMode: true
         EnvironmentVariables:
         - Name: REPOSITORY_URI
           Value: !Sub ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${EcrDockerRepository}
         - Name: REPOSITORY_NAME
-          Value: !Ref GitSourceRepo
+          Value:
+            Ref: GitSourceRepo
         - Name: REPOSITORY_BRANCH
-          Value: !Ref GitBranch
+          Value:
+            Ref: GitBranch
         - Name: EKS_CLUSTER_NAME
-          Value: !Ref EksClusterName
+          Value:
+            Ref: EksClusterName
         - Name: EKS_KUBECTL_ROLE_ARN
-          Value: !Sub arn:aws:iam::${AWS::AccountId}:role/EksWorkshopCodeBuildKubectlRole
-      Name: !Ref AWS::StackName
+          Value: !Sub arn:aws:iam::${AWS::AccountId}:role/${EksDeployerRolename}
+      Name:
+        Ref: AWS::StackName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
 
   CodePipelineGitHub:
@@ -228,7 +242,8 @@ Resources:
       RoleArn: !GetAtt CodePipelineServiceRole.Arn
       ArtifactStore:
         Type: S3
-        Location: !Ref CodePipelineArtifactBucket
+        Location:
+          Ref: CodePipelineArtifactBucket
       Stages:
       - Name: Source
         Actions:
@@ -239,10 +254,14 @@ Resources:
             Version: 1
             Provider: GitHub
           Configuration:
-            Owner: !Ref GitHubUser
-            Repo: !Ref GitSourceRepo
-            Branch: !Ref GitBranch
-            OAuthToken: !Ref GitHubToken
+            Owner:
+              Ref: GitHubUser
+            Repo:
+              Ref: GitSourceRepo
+            Branch:
+              Ref: GitBranch
+            OAuthToken:
+              Ref: GitHubToken
           OutputArtifacts:
           - Name: App
           RunOrder: 1
@@ -255,7 +274,8 @@ Resources:
             Version: 1
             Provider: CodeBuild
           Configuration:
-            ProjectName: !Ref CodeBuildProject
+            ProjectName:
+              Ref: CodeBuildProject
           InputArtifacts:
           - Name: App
           OutputArtifacts:
