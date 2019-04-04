@@ -40,10 +40,11 @@ fi
 aws eks --region eu-west-1 update-kubeconfig --name ${CLUSTER_NAME} >/dev/null 2>&1
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+ROLE="    - rolearn: arn:aws:iam::$ACCOUNT_ID:role/${DEPLYOER_ROLE_NAME}\n      username: build\n      groups:\n        - system:masters"
 
-ROLE="        - rolearn: arn:aws:iam::$ACCOUNT_ID:role/$DEPLOYER_ROLE_NAME\n          username: codebuild\n          groups:\n            - system:masters"
+kubectl get -n kube-system configmap/aws-auth -o yaml | awk "/mapRoles: \|/{print;print \"$ROLE\";next}1" > /tmp/aws-auth-patch.yml
 
-kubectl get -n kube-system configmap/aws-auth -o yaml | awk "/mapRoles: \|/{print;print \"$ROLE\";next}1" > tmp/aws-auth-patch.yml
+kubectl patch configmap/aws-auth -n kube-system --patch "$(cat /tmp/aws-auth-patch.yml)"
 
 cat tmp/aws-auth-patch.yml
 
