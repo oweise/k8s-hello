@@ -155,7 +155,7 @@ Resources:
         PolicyDocument:
           Version: 2012-10-17
           Statement:
-          - Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/EksWorkshopCodeBuildKubectlRole
+          - Resource: !Sub arn:aws:iam::${AWS::AccountId}:role/${EksDeployerRoleName}
             Effect: Allow
             Action:
             - sts:AssumeRole
@@ -231,7 +231,7 @@ Resources:
           Value:
             Ref: EksClusterName
         - Name: EKS_KUBECTL_ROLE_ARN
-          Value: !Sub arn:aws:iam::${AWS::AccountId}:role/${EksDeployerRolename}
+          Value: !Sub arn:aws:iam::${AWS::AccountId}:role/${EksDeployerRoleName}
       Name:
         Ref: AWS::StackName
       ServiceRole: !GetAtt CodeBuildServiceRole.Arn
