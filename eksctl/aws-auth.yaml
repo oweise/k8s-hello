@@ -5,7 +5,7 @@ metadata:
   namespace: kube-system
 data:
   mapRoles: |
-    - rolearn: ${AWS_ROLE_ARN}
+    - rolearn: ${DEPLOYER_ROLE_NAME}
       username: codebuild
       groups:
       - system:masters

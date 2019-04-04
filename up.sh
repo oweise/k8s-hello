@@ -19,13 +19,14 @@ echo "========================================================================="
 echo "k8s-hello: Create Deploy Role and grant Kubernetes Access"
 echo "========================================================================="
 
-if aws cloudformation describe-stack-resources --stack-name=${DEPLOYER_ROLE_STACK_NAME} >/dev/null 2>&1; then
+if aws cloudformation describe-stack-resources --stack-name=${DEPLOYER_ROLE_STACK_NAME} > /dev/null 2>&1; then
   echo "Role stack already exists. Updating it  ...."
   aws cloudformation update-stack \
         --stack-name=${DEPLOYER_ROLE_STACK_NAME} \
         --template-body file://cloudformation/create-deployer-role.yml \
         --parameters ParameterKey=DeployerRoleName,ParameterValue=${DEPLOYER_ROLE_NAME} \
-        --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+        --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM \
+        > /dev/null 2>&1
 
 else
   aws cloudformation create-stack \
@@ -33,9 +34,10 @@ else
     --template-body file://cloudformation/create-deployer-role.yml \
     --parameters ParameterKey=DeployerRoleName,ParameterValue=${DEPLOYER_ROLE_NAME} \
     --capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+    > /dev/null 2>&1
 fi
 
-aws eks --region eu-west-1 update-kubeconfig --name ${CLUSTER_NAME} >/dev/null
+aws eks --region eu-west-1 update-kubeconfig --name ${CLUSTER_NAME} >/dev/null 2>&1
 
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 
@@ -60,7 +62,8 @@ if aws cloudformation describe-stack-resources --stack-name=${PIPELINE_STACK_NAM
         --stack-name=${PIPELINE_STACK_NAME} \
         --template-body file://cloudformation/code-pipeline.yml \
         --parameters file://tmp/parameters.json \
-        --capabilities CAPABILITY_IAM
+        --capabilities CAPABILITY_IAM \
+        > /dev/null 2>&1
 
     if [ "$?" == "0" ]; then
         aws cloudformation wait stack-update-complete \
@@ -73,7 +76,8 @@ else
         --stack-name=${PIPELINE_STACK_NAME} \
         --template-body file://cloudformation/code-pipeline.yml \
         --parameters file://tmp/parameters.json \
-        --capabilities CAPABILITY_IAM
+        --capabilities CAPABILITY_IAM \
+        > /dev/null 2>&1
 
     rm tmp/parameters.json
 
