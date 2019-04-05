@@ -89,16 +89,6 @@ Within the root directory of the project, you will find a file
 `config.template.sh`. Copy this file to to `config.sh` in the same directory 
 and edit its values accordingly.
 
----
-***Hint***
-
-To prevent accidental commitment of the file `config.sh` to your repository, 
-you can add it to `.git/info/exclude`:
-```
-echo "config.sh" >> .git/info/exclude
-```
----
-
 ### Preparing cluster definition file
 
 Also there is a file "eksctl/cluster-definition.yaml". It contains a definition 
@@ -191,7 +181,7 @@ aws configure set region eu-west-1
  
 ## Deploy the cluster and a sample deployment
 
-All you have to do is to call `./up.sh`. The script deplyos the AWS cluster,
+All you have to do is to call `./up.sh`. The script deploys the AWS cluster,
 3 worker nodes and a sample deployment for you.
 
 To connect to the cluster, you need to update your `~/.kube/config`. This can 
