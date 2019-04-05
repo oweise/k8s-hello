@@ -51,43 +51,43 @@ cat tmp/aws-auth-patch.yml
 kubectl patch configmap/aws-auth -n kube-system --patch "$(cat tmp/aws-auth-patch.yml)" >/dev/null 2>&1
 rm tmp/aws-auth-patch.yml
 
-#echo "========================================================================="
-#echo "k8s-hello: Creating Project Pipeline"
-#echo "========================================================================="
-#
-#cat cloudformation/parameters.json | envsubst > tmp/parameters.json
-#
-#if aws cloudformation describe-stack-resources --stack-name=${PIPELINE_STACK_NAME} >/dev/null 2>&1; then
-#  echo "Pipeline stack already exists. Updating it  ...."
-#  aws cloudformation update-stack \
-#        --stack-name=${PIPELINE_STACK_NAME} \
-#        --template-body file://cloudformation/code-pipeline.yml \
-#        --parameters file://tmp/parameters.json \
-#        --capabilities CAPABILITY_IAM \
-#        > /dev/null 2>&1
-#
-#    if [ "$?" == "0" ]; then
-#        aws cloudformation wait stack-update-complete \
-#            --stack-name=${PIPELINE_STACK_NAME}
-#    fi
-#
-#    rm tmp/parameters.json
-#else
-#    aws cloudformation create-stack \
-#        --stack-name=${PIPELINE_STACK_NAME} \
-#        --template-body file://cloudformation/code-pipeline.yml \
-#        --parameters file://tmp/parameters.json \
-#        --capabilities CAPABILITY_IAM \
-#        > /dev/null 2>&1
-#
-#    rm tmp/parameters.json
-#
-#    aws cloudformation wait stack-create-complete \
-#        --stack-name=${PIPELINE_STACK_NAME}
-#fi
-#
-#echo "========================================================================="
-#echo "k8s-hello: FINISHED"
-#echo "========================================================================="
+echo "========================================================================="
+echo "k8s-hello: Creating Project Pipeline"
+echo "========================================================================="
+
+cat cloudformation/parameters.json | envsubst > tmp/parameters.json
+
+if aws cloudformation describe-stack-resources --stack-name=${PIPELINE_STACK_NAME} >/dev/null 2>&1; then
+  echo "Pipeline stack already exists. Updating it  ...."
+  aws cloudformation update-stack \
+        --stack-name=${PIPELINE_STACK_NAME} \
+        --template-body file://cloudformation/code-pipeline.yml \
+        --parameters file://tmp/parameters.json \
+        --capabilities CAPABILITY_IAM \
+        > /dev/null 2>&1
+
+    if [ "$?" == "0" ]; then
+        aws cloudformation wait stack-update-complete \
+            --stack-name=${PIPELINE_STACK_NAME}
+    fi
+
+    rm tmp/parameters.json
+else
+    aws cloudformation create-stack \
+        --stack-name=${PIPELINE_STACK_NAME} \
+        --template-body file://cloudformation/code-pipeline.yml \
+        --parameters file://tmp/parameters.json \
+        --capabilities CAPABILITY_IAM \
+        > /dev/null 2>&1
+
+    rm tmp/parameters.json
+
+    aws cloudformation wait stack-create-complete \
+        --stack-name=${PIPELINE_STACK_NAME}
+fi
+
+echo "========================================================================="
+echo "k8s-hello: FINISHED"
+echo "========================================================================="
 
 rmdir tmp
