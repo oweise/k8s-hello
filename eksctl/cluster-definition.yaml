@@ -13,4 +13,4 @@ nodeGroups:
   instanceType: m5.large
   desiredCapacity: 3
   allowSSH: true
-  sshPublicKeyPath: /home/marco/.ssh/id_rsa.pub
+  sshPublicKeyPath: ${SSH_PUBLIC_KEY_FILE}

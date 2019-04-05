@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+trap "exit" INT
+
 . config.sh
 
 mkdir -p tmp

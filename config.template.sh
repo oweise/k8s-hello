@@ -4,6 +4,7 @@ export GITHUB_TOKEN="<enter token here>"
 export GITHUB_USER="<enter user here>"
 export CODEBUILD_DOCKERIMAGE="aws/codebuild/java:openjdk-8"
 export OWNER="<your name here>"
+export SSH_PUBLIC_KEY_FILE="<path-to-ssh-public-key>"
 
 export DEPLOYER_ROLE_NAME=k8s-deployer
 export DEPLOYER_ROLE_STACK_NAME=${CLUSTER_NAME}-deployer-role
