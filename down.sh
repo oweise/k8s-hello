@@ -24,6 +24,16 @@ else
 fi
 
 echo "========================================================================="
+echo "k8s-hello: Deleting Deploy role"
+echo "========================================================================="
+if aws cloudformation describe-stack-resources --stack-name=${DEPLOYER_ROLE_STACK_NAME} >> /dev/null; then
+    aws cloudformation delete-stack --stack-name=${DEPLOYER_ROLE_STACK_NAME}
+    aws cloudformation wait stack-delete-complete --stack-name=${DEPLOYER_ROLE_STACK_NAME}
+else
+    echo "Deployer role stack does not exist. Skipping ..."
+fi
+
+echo "========================================================================="
 echo "k8s-hello: Deleting EKS cluster"
 echo "========================================================================="
 
