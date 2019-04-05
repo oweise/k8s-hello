@@ -9,7 +9,8 @@ metadata:
 
 nodeGroups:
 - name: ng-1
+  ami: ami-0a9006fb385703b54
   instanceType: m5.large
   desiredCapacity: 3
   allowSSH: true
-  sshPublicKeyPath: /home/oliver/.ssh/id_rsa.pub
+  sshPublicKeyPath: ${SSH_PUBLIC_KEY_FILE}

@@ -4,6 +4,10 @@
     "ParameterValue": "${CLUSTER_NAME}"
   },
   {
+    "ParameterKey": "EksDeployerRoleName",
+    "ParameterValue": "${DEPLOYER_ROLE_NAME}"
+  },
+  {
     "ParameterKey": "GitHubToken",
     "ParameterValue": "${GITHUB_TOKEN}"
   },
