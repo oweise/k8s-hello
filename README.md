@@ -12,18 +12,18 @@ Kubernetes.
 
 What you will need:
 
-- [Git CLI](https://git-scm.com/). We are pretty confident you already have it.
-- [eksctl CLI](https://github.com/weaveworks/eksctl), a convenience command 
+- [Git CLI][GitCLI]. We are pretty confident you already have it.
+- [eksctl CLI][eksctlCLI], a convenience command 
   line tool to create EKS clusters, built by Weaveworks.
 - An AWS account with the policy "AdministratorAccess" and its access and 
   secret key
-- The [AWS CLI](https://aws.amazon.com/de/cli/), an Amazon tool to work with 
+- The [AWS CLI][awsCLI], an Amazon tool to work with 
   AWS. It must be setup to use the account mentioned above.
-- The [kubectl CLI](https://kubernetes.io/docs/tasks/tools/install-kubectl/), 
+- The [kubectl CLI][kubectlCLI], 
   the default Kubernetes client in version 1.11 or higher. This is not really 
   needed for setup but for everything you want to do with this cluster, so we 
   will ensure that it is configured to access the it.
-- The [AWS IAM Authenticator](https://github.com/kubernetes-sigs/aws-iam-authenticator/releases).
+- The [AWS IAM Authenticator][awsIAMAuthenticator].
   This is a tool that will allow kubectl to login to EKS with Amazon 
   credentials. You just need to download it and put it somewhere on your PATH. 
   You do not need to execute the setup procedure described on the projects 
@@ -40,7 +40,7 @@ even if there is no actual traffic on it.
  **NOTE:**
  All command line instructions here are for Linux shells. On Windows you might 
  need to change the calls accordingly. You might want to consider using the 
- [Linux Subsystem for Windows 10](https://docs.microsoft.com/en-us/windows/wsl/install-win10)
+ [Linux Subsystem for Windows 10][bashOnWindows]
  which allows you to use a native Linux shell, seamlessly integrated on Windows 
  10. Might spare you some nerves :)
 
@@ -239,4 +239,11 @@ resources created (including the kubernetes-deployment, worker nodes, and the
 cluster itself).
 
 Please pay close attention to any error messages during shutdown to catch 
-potentially undeleted resources. 
+potentially undeleted resources.
+
+[GitCLI]: https://git-scm.com/ 
+[eksctlCLI]: https://github.com/weaveworks/eksctl
+[awsCLI]: https://aws.amazon.com/de/cli/
+[kubectlCLI]: https://kubernetes.io/docs/tasks/tools/install-kubectl/
+[awsIAMAuthenticator]: https://github.com/kubernetes-sigs/aws-iam-authenticator/releases
+[bashOnWindows]: https://docs.microsoft.com/en-us/windows/wsl/install-win10
