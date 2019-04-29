@@ -1,21 +1,26 @@
 # k8s-hello
 
-A demo project for:
+A project to:
 
-- Deploying a Kubernetes Cluster in AWS via eksctl. The cluster will have 3 
+- Deploy a Kubernetes Cluster in AWS via eksctl. The cluster will have 3 
   worker nodes of AWS instance type "t2.micro"
-- Building a trivial Spring Boot Application via CodePipeline and deploying it 
+- Build a trivial Spring Boot Application via CodePipeline and deploying it 
   into the Kubernetes Cluster
 
 ... for usage as a blueprint for further projects to experiment with AWS on 
 Kubernetes.
 
-What you will need:
+You will need quite some tools installed on your machine to use this project. 
+However most of these should be in your default toolbox for working with AWS and
+Kubernetes anyway, so getting them ready is some effort that needs to be done 
+in any case when using these technologies.
+
+These tools are:
 
 - A bash-like shell. If you are a Windows user we recommend you install the 
-  [Linux Subsystem for Windows][bashOnWindows]. Might seem overkill right now
-  but as working with Kubernetes is often tightly coupled to working with Linux 
-  we think it will save you some nerves further down the line. 
+  [Linux Subsystem for Windows][bashOnWindows]. Might seem overkill right now,
+  but working with Kubernetes is often tightly coupled to working with Linux, so 
+  we think going this way now might quite save you some nerves further down the line. 
 - [Git CLI][GitCLI]. We are pretty confident you already have it.
 - [eksctl CLI][eksctlCLI], a convenience command 
   line tool to create EKS clusters, built by Weaveworks.
@@ -30,8 +35,8 @@ What you will need:
 - The [AWS IAM Authenticator][awsIAMAuthenticator].
   This is a tool that will allow kubectl to login to EKS with Amazon 
   credentials. You just need to download it and put it somewhere on your PATH. 
-  You do not need to execute the setup procedure described on the projects 
-  README. 
+  You do not need to execute the setup procedure described on the README of
+  the GitHub project. 
   
 **WARNING:** 
 This deployment will actually cause some costs on your AWS account. These 
@@ -40,7 +45,6 @@ finished working with it. If you keep it running for a longer time you will
 cause additional time-based costs for using certain resources (Kubernetes 
 Masters, Load Balancers, EC2 instances depending on the instance type you use)
 even if there is no actual traffic on it.
- 
 
 ## Preparations
 
@@ -93,6 +97,8 @@ export GITHUB_USER="<enter user here>"
 export CODEBUILD_DOCKERIMAGE="aws/codebuild/java:openjdk-8"
 export OWNER="<your name here>"
 export SSH_PUBLIC_KEY_FILE="<path-to-ssh-public-key>"
+
+# ... more automated stuff ...
 ```
 
 You should edit this file and fill in your data, at least the following:
