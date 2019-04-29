@@ -12,6 +12,10 @@ Kubernetes.
 
 What you will need:
 
+- A bash-like shell. If you are a Windows user we recommend you install the 
+  [Linux Subsystem for Windows][bashOnWindows]. Might seem overkill right now
+  but as working with Kubernetes is often tightly coupled to working with Linux 
+  we think it will save you some nerves further down the line. 
 - [Git CLI][GitCLI]. We are pretty confident you already have it.
 - [eksctl CLI][eksctlCLI], a convenience command 
   line tool to create EKS clusters, built by Weaveworks.
@@ -22,13 +26,13 @@ What you will need:
 - The [kubectl CLI][kubectlCLI], 
   the default Kubernetes client in version 1.11 or higher. This is not really 
   needed for setup but for everything you want to do with this cluster, so we 
-  will ensure that it is configured to access the it.
+  will ensure that it is configured to access it.
 - The [AWS IAM Authenticator][awsIAMAuthenticator].
   This is a tool that will allow kubectl to login to EKS with Amazon 
   credentials. You just need to download it and put it somewhere on your PATH. 
   You do not need to execute the setup procedure described on the projects 
   README. 
-
+  
 **WARNING:** 
 This deployment will actually cause some costs on your AWS account. These 
 should be kept small (*some* dollars) if you destroy the deployment once you 
@@ -37,12 +41,6 @@ cause additional time-based costs for using certain resources (Kubernetes
 Masters, Load Balancers, EC2 instances depending on the instance type you use)
 even if there is no actual traffic on it.
  
- **NOTE:**
- All command line instructions here are for Linux shells. On Windows you might 
- need to change the calls accordingly. You might want to consider using the 
- [Linux Subsystem for Windows 10][bashOnWindows]
- which allows you to use a native Linux shell, seamlessly integrated on Windows 
- 10. Might spare you some nerves :)
 
 ## Preparations
 
@@ -82,19 +80,35 @@ needs an access token.
   only be able to retrieve it right now! Don't give it away because it enables
   anybody to use Github via your account!
 
-
 ### Preparing environment variables ###
 
 Within the root directory of the project, you will find a file 
-`config.template.sh`. Copy this file to to `config.sh` in the same directory 
-and edit its values accordingly.
+`config.template.sh`. Copy this file to to `config.sh` in the same directory. This is its default contents:
+
+```bash
+#!/usr/bin/env bash
+export CLUSTER_NAME=k8s-hello
+export GITHUB_TOKEN="<enter token here>"
+export GITHUB_USER="<enter user here>"
+export CODEBUILD_DOCKERIMAGE="aws/codebuild/java:openjdk-8"
+export OWNER="<your name here>"
+export SSH_PUBLIC_KEY_FILE="<path-to-ssh-public-key>"
+```
+
+You should edit this file and fill in your data, at least the following:
+- You should determine a CLUSTER_NAME that is specific for you. There can be only one cluster name per AWS account.
+- Enter the GITHUB_TOKEN you just created and also specify the GITHUB_USER for which this token was created.
+- Specify your name as OWNER. This will go into an "owner" tag on the created resources for auditing purposes.
+- Specify a path to your SSH public key file under SSH_PUBLIC_KEY_FILE if available.
+
+The config.sh file will not be checked in with the Git Repo to keep information like your Github token private.
 
 ### Preparing cluster definition file
 
 Also there is a file "eksctl/cluster-definition.yaml". It contains a definition 
-file for your Kubernetes cluster. Most of it is configured through 
-aforementioned `config.sh`. For debugging purposes, however, it is recommended 
-to add the path to your public SSH key:
+file for your Kubernetes cluster: 
+
+
 ``` 
 apiVersion: eksctl.io/v1alpha4
 kind: ClusterConfig
@@ -111,17 +125,20 @@ nodeGroups:
   instanceType: m5.large
   desiredCapacity: 3
   allowSSH: true
-  sshPublicKeyPath: <path to your ssh-key>
+  sshPublicKeyPath: ${SSH_PUBLIC_KEY_FILE}
 ```
+
+Most of it is configured through aforementioned `config.sh` but you may add your own settings here.
+
+If you chose to not specify the SSH_PUBLIC_KEY_FILE on the config.sh then you should remove the line "sshPublicKeyPath"
+here.
 
 ### Prepare parameters file for Cloud Formation
 
 These parameters influence the build process of your project in AWS.
 
 You find a file "cloudformation/parameters.json" in this repo which, again, is 
-feeded with the environment variables from `config.sh`. Replacement of the 
-environment variables through its values is done by the scripts `up.sh` and 
-`down.sh` by calling `cat cloudformation/parameter.json | envsubst`.
+fed with the environment variables from `config.sh`.
 
 ```
 [
@@ -148,14 +165,8 @@ environment variables through its values is done by the scripts `up.sh` and
 ]
 ```
 
-This file contains the mandatory parameters, expecting the following values: 
-  
-- GitHubToken: The Github Token for your account created earlier
-- GitHubUser: Your Github user name, or more specific, the user name which owns 
-  the repository fork
- 
 Other parameters can be added in the provided syntax. You will need these only 
-if you copied the repository to create your own projects:
+if you copied (!=forked) the repository to create your own projects:
 
 - GitSourceRepo: Name of the GitHub repository for checkout. 
 - GitBranch: The branch to check out.
@@ -164,10 +175,10 @@ if you copied the repository to create your own projects:
 ### Ensure correct region for AWS CLI
  
 You should ensure that you create the resources in the same AWS region as your 
-cluster has been created. If you kept the default that is "eu-west-1" 
-(Ireland). If you use the Web Console you can choose the region by the "region" 
-selector to the top right. If you use the AWS CLI the default region of your 
-client config will be effective. You can review it by
+cluster has been created. If you kept the default in the cluster definition file
+then it is "eu-west-1" (Ireland). 
+
+The default region of your client config will be effective. You can review it by:
  
 ```
 aws configure list
