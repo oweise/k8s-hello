@@ -198,8 +198,8 @@ aws configure set region eu-west-1
  
 ## Deploy the cluster and a sample deployment
 
-All you have to do is to call `./up.sh`. The script deploys the AWS cluster,
-3 worker nodes and a sample deployment for you.
+All you have to do is to call `./up.sh` in your "bash-like shell". 
+The script deploys the AWS cluster, 3 worker nodes and a sample deployment for you.
 
 To connect to the cluster, you need to update your `~/.kube/config`. This can 
 be done through
@@ -241,8 +241,8 @@ subdir "dashboard" of this repo.
 
 ## Clean up
 
-As with deployment, shutdown is done through a script `down.sh`, that removes
-resources created (including the kubernetes-deployment, worker nodes, and the 
+As with deployment, shutdown is done through a bash script `down.sh`, that removes
+the resources that were created (including the kubernetes-deployment, worker nodes, and the 
 cluster itself).
 
 Please pay close attention to any error messages during shutdown to catch 
