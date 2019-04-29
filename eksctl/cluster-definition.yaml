@@ -1,0 +1,16 @@
+apiVersion: eksctl.io/v1alpha4
+kind: ClusterConfig
+
+metadata:
+  name: ${CLUSTER_NAME}
+  region: eu-west-1
+  tags:
+    owner: ${OWNER}
+
+nodeGroups:
+- name: ng-1
+  ami: ami-0a9006fb385703b54
+  instanceType: m5.large
+  desiredCapacity: 3
+  allowSSH: true
+  sshPublicKeyPath: ${SSH_PUBLIC_KEY_FILE}

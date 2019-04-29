@@ -1,0 +1,22 @@
+[
+  {
+    "ParameterKey": "EksClusterName",
+    "ParameterValue": "${CLUSTER_NAME}"
+  },
+  {
+    "ParameterKey": "EksDeployerRoleName",
+    "ParameterValue": "${DEPLOYER_ROLE_NAME}"
+  },
+  {
+    "ParameterKey": "GitHubToken",
+    "ParameterValue": "${GITHUB_TOKEN}"
+  },
+  {
+    "ParameterKey": "GitHubUser",
+    "ParameterValue": "${GITHUB_USER}"
+  },
+  {
+    "ParameterKey": "GitBranch",
+    "ParameterValue": "${GIT_BRANCH}"
+  }
+]
