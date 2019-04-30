@@ -102,7 +102,7 @@ export SSH_PUBLIC_KEY_FILE="<path-to-ssh-public-key>"
 ```
 
 You should edit this file and fill in your data, at least the following:
-- You should determine a CLUSTER_NAME that is specific for you. There can be only one cluster name per AWS account.
+- You should determine a CLUSTER_NAME that is specific for you. This cluster name is unique per AWS account.
 - Enter the GITHUB_TOKEN you just created and also specify the GITHUB_USER for which this token was created.
 - Specify your name as OWNER. This will go into an "owner" tag on the created resources for auditing purposes.
 - Specify a path to your SSH public key file under SSH_PUBLIC_KEY_FILE if available.
